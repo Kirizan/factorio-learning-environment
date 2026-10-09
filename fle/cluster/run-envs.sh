@@ -106,6 +106,12 @@ version: '3'
 services:
 EOF
     
+    # Strip the Space Age DLC mods unless FLE_DLC is set (see run_envs.dlc_enabled)
+    DLC_STRIP="rm -rf /opt/factorio/data/elevated-rails /opt/factorio/data/quality /opt/factorio/data/space-age && "
+    case "${FLE_DLC:-}" in
+        1|true|TRUE|yes|YES) DLC_STRIP="" ;;
+    esac
+
     # Add the specified number of factorio services
     for i in $(seq 0 $(($NUM_INSTANCES - 1))); do
         UDP_PORT=$((34197 + i))
@@ -115,7 +121,7 @@ EOF
   factorio_${i}:
     image: factoriotools/factorio:2.0.73
     platform: \${DOCKER_PLATFORM:-linux/amd64}
-    command: /bin/sh -c 'rm -rf /opt/factorio/data/elevated-rails /opt/factorio/data/quality /opt/factorio/data/space-age && exec ${EMULATOR} /opt/factorio/bin/x64/factorio ${COMMAND}
+    command: /bin/sh -c '${DLC_STRIP}exec ${EMULATOR} /opt/factorio/bin/x64/factorio ${COMMAND}
       --port 34197 --server-settings /opt/factorio/config/server-settings.json --map-gen-settings
       /opt/factorio/config/map-gen-settings.json --map-settings /opt/factorio/config/map-settings.json
       --server-banlist /opt/factorio/config/server-banlist.json --rcon-port 27015

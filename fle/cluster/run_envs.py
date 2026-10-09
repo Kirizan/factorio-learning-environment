@@ -18,6 +18,14 @@ START_GAME_PORT = 34197
 RCON_PASSWORD = os.environ.get("FACTORIO_RCON_PASSWORD", "factorio")
 
 
+def dlc_enabled() -> bool:
+    """Keep the Space Age DLC mods (space-age, quality, elevated-rails).
+
+    Off by default. Env override: FLE_DLC=1
+    """
+    return os.environ.get("FLE_DLC", "").lower() in ("1", "true", "yes")
+
+
 def resolve_state_dir() -> Path:
     """Resolve platform-specific state directory with env override.
 
@@ -121,6 +129,8 @@ class ComposeGenerator:
         args.append("--mod-directory /opt/factorio/mods")
         factorio_bin = f"{self._emulator()} /opt/factorio/bin/x64/factorio".strip()
         factorio_cmd = " ".join([factorio_bin, launch_command] + args)
+        if dlc_enabled():
+            return f"/bin/sh -c 'exec {factorio_cmd}'"
         # Remove DLC data dirs so the server runs vanilla base-game only;
         # this prevents "Sync mods with server" / "No release" errors for
         # clients that don't own Space Age.
