@@ -1117,3 +1117,174 @@ class Vehicle(Entity, BurnerType):
     trunk_inventory: Inventory = Inventory()
     _height: float = 2
     _width: float = 2
+
+
+# --- Space Age entities -----------------------------------------------------
+# Minimal classes for Factorio 2.0 Space Age prototypes. Where a prototype
+# behaves like an existing entity they subclass it and only override the tile
+# footprint (exposed to agents as Prototype.X.WIDTH / HEIGHT).
+
+
+class Foundry(MultiFluidHandler, AssemblingMachine):
+    """Space Age foundry: casts molten metals into plates and parts.
+    Requires power to operate"""
+
+    _height: float = 5
+    _width: float = 5
+
+
+class ElectromagneticPlant(MultiFluidHandler, AssemblingMachine):
+    """Space Age electromagnetic plant: crafts electronics and electromagnetic recipes.
+    Requires power to operate"""
+
+    _height: float = 4
+    _width: float = 4
+
+
+class CryogenicPlant(MultiFluidHandler, AssemblingMachine):
+    """Space Age cryogenic plant: crafts cryogenic and chemistry recipes.
+    Requires power to operate"""
+
+    _height: float = 5
+    _width: float = 5
+
+
+class Biochamber(MultiFluidHandler, AssemblingMachine, BurnerType):
+    """Space Age biochamber: crafts organic recipes. Fuelled with nutrients"""
+
+    _height: float = 3
+    _width: float = 3
+
+
+class Crusher(AssemblingMachine):
+    """Space Age crusher: crushes asteroid chunks.
+    Requires power to operate"""
+
+    _height: float = 3
+    _width: float = 2
+
+
+class CaptiveBiterSpawner(AssemblingMachine):
+    """Space Age captive biter spawner: produces biter eggs"""
+
+    _height: float = 5
+    _width: float = 5
+
+
+class BigMiningDrill(ElectricMiningDrill):
+    """Space Age big mining drill (5x5)"""
+
+    _height: float = 5
+    _width: float = 5
+
+
+class Biolab(Lab):
+    """Space Age biolab: a faster research laboratory (5x5)"""
+
+    _height: float = 5
+    _width: float = 5
+
+
+class Recycler(ElectricFurnace):
+    """Space Age recycler: breaks items back down into ingredients"""
+
+    _height: float = 4
+    _width: float = 2
+
+
+class HeatingTower(Reactor, BurnerType):
+    """Space Age heating tower: burns fuel to produce heat"""
+
+    _height: float = 3
+    _width: float = 3
+
+
+class RocketTurret(GunTurret):
+    """Space Age rocket turret (ammo-fed)"""
+
+    _height: float = 3
+    _width: float = 3
+
+
+class RailgunTurret(Turret):
+    """Space Age railgun turret (ammo-fed, requires power)"""
+
+    _height: float = 5
+    _width: float = 3
+
+
+class TeslaTurret(Turret):
+    """Space Age tesla turret (electric)"""
+
+    _height: float = 4
+    _width: float = 4
+
+
+class AgriculturalTower(StaticEntity, Electric):
+    """Space Age agricultural tower: plants and harvests crops around it"""
+
+    _height: float = 3
+    _width: float = 3
+
+
+class LightningAttractor(StaticEntity, Electric):
+    """Space Age lightning rod: attracts lightning strikes and converts them to power"""
+
+    _height: float = 1
+    _width: float = 1
+
+
+class LightningCollector(LightningAttractor):
+    """Space Age lightning collector (2x2 lightning attractor)"""
+
+    _height: float = 2
+    _width: float = 2
+
+
+class FusionReactor(MultiFluidHandler, BurnerType, Electric):
+    """Space Age fusion reactor: turns fluoroketone and fusion power cells into plasma"""
+
+    _height: float = 6
+    _width: float = 6
+
+
+class FusionGenerator(MultiFluidHandler, ElectricalProducer):
+    """Space Age fusion generator: turns fusion plasma into electricity"""
+
+    _height: float = 5
+    _width: float = 3
+
+
+class AsteroidCollector(StaticEntity, Electric):
+    """Space Age asteroid collector: grabs asteroid chunks near a space platform"""
+
+    _height: float = 3
+    _width: float = 3
+
+
+class Thruster(MultiFluidHandler):
+    """Space Age thruster: propels a space platform using fuel and oxidizer"""
+
+    _height: float = 5
+    _width: float = 4
+
+
+class CargoBay(StaticEntity):
+    """Space Age cargo bay: extends a space platform hub or cargo landing pad"""
+
+    _height: float = 4
+    _width: float = 4
+
+
+class CargoLandingPad(Chest):
+    """Space Age cargo landing pad: receives cargo pods from orbit"""
+
+    _height: float = 8
+    _width: float = 8
+
+
+class SpacePlatformHub(Chest):
+    """Space Age space platform hub: the core of a space platform"""
+
+    _height: float = 8
+    _width: float = 8
