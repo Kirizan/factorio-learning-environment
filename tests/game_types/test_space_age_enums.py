@@ -140,3 +140,102 @@ def test_renamed_members_resolve_to_2_0_names():
 
 def test_namespace_imports_cleanly():
     import fle.env.namespace  # noqa: F401
+
+
+# Pre-existing FLE footprints that disagree with the 2.0 prototypes (beyond a
+# plain rotation). Tracked separately; new members must match the dump.
+KNOWN_FOOTPRINT_MISMATCHES = {
+    "offshore-pump",
+    "big-electric-pole",
+    "substation",
+    "constant-combinator",
+    "power-switch",
+    "cargo-wagon",
+    "fluid-wagon",
+    "artillery-wagon",
+    "tank",
+    "artillery-turret",
+}
+
+
+def test_entity_footprints_match_dump(dump):
+    wrong = []
+    for member in Prototype:
+        name, cls = member.value
+        attrs = getattr(cls, "__private_attributes__", {}) if cls else {}
+        if name not in dump["entities"] or "_width" not in attrs:
+            continue
+        if name in KNOWN_FOOTPRINT_MISMATCHES:
+            continue
+        entity = dump["entities"][name]
+        if sorted([member.WIDTH, member.HEIGHT]) != sorted(
+            [entity["tile_width"], entity["tile_height"]]
+        ):
+            wrong.append((name, (member.WIDTH, member.HEIGHT)))
+    assert not wrong, f"Prototype footprints differ from the dump: {wrong}"
+
+
+def test_space_age_members_resolve():
+    from fle.env import entities as ent
+
+    expected = {
+        "foundry": ent.Foundry,
+        "electromagnetic-plant": ent.ElectromagneticPlant,
+        "biochamber": ent.Biochamber,
+        "cryogenic-plant": ent.CryogenicPlant,
+        "recycler": ent.Recycler,
+        "agricultural-tower": ent.AgriculturalTower,
+        "big-mining-drill": ent.BigMiningDrill,
+        "turbo-transport-belt": ent.TransportBelt,
+        "turbo-underground-belt": ent.UndergroundBelt,
+        "turbo-splitter": ent.Splitter,
+        "stack-inserter": ent.Inserter,
+        "space-platform-hub": ent.SpacePlatformHub,
+        "asteroid-collector": ent.AsteroidCollector,
+        "thruster": ent.Thruster,
+        "cargo-landing-pad": ent.CargoLandingPad,
+        "cargo-bay": ent.CargoBay,
+        "lightning-rod": ent.LightningAttractor,
+        "lightning-collector": ent.LightningCollector,
+        "heating-tower": ent.HeatingTower,
+        "fusion-reactor": ent.FusionReactor,
+        "fusion-generator": ent.FusionGenerator,
+        "railgun-turret": ent.RailgunTurret,
+        "tesla-turret": ent.TeslaTurret,
+    }
+    for name, cls in expected.items():
+        assert prototype_by_name[name].entity_class is cls, name
+    for item in (
+        "tungsten-carbide",
+        "holmium-plate",
+        "superconductor",
+        "carbon-fiber",
+        "bioflux",
+        "nutrients",
+        "metallurgic-science-pack",
+        "electromagnetic-science-pack",
+        "agricultural-science-pack",
+        "cryogenic-science-pack",
+        "promethium-science-pack",
+        "promethium-asteroid-chunk",
+        "space-platform-starter-pack",
+    ):
+        assert prototype_by_name[item].entity_class is None, item
+    assert Prototype.StackInserter.value[0] == "stack-inserter"
+    assert Prototype.ElectromagneticPlant is prototype_by_name["electromagnetic-plant"]
+    assert technology_by_name["mining-productivity-3"]
+    assert Technology.Foundry.value == "foundry"
+    assert RecipeName.MoltenIron.value == "molten-iron"
+    assert Resource.TungstenOre == ("tungsten-ore", ent.ResourcePatch)
+    assert Resource.Lava[0] == "lava"
+    assert ResourceName.Calcite.value == "calcite"
+
+
+def test_generator_is_idempotent(dump):
+    import importlib.util
+
+    script = Path(__file__).resolve().parents[2] / "scripts/gen_space_age_enums.py"
+    spec = importlib.util.spec_from_file_location("gen_space_age_enums", script)
+    gen = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gen)
+    assert gen.main([str(DUMP_DIR), "--check"]) == 0
