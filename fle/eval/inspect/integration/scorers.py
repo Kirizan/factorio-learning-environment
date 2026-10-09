@@ -747,8 +747,8 @@ def technologies() -> Scorer:
             tier1_techs = {
                 "automation",
                 "logistics",
-                "optics",
-                "turrets",
+                "lamp",
+                "gun-turret",
                 "stone-wall",
                 "electronics",
                 "steel-processing",
@@ -771,8 +771,8 @@ def technologies() -> Scorer:
             tier3_techs = {
                 "automation-3",
                 "logistics-3",
-                "advanced-electronics",
-                "advanced-electronics-2",
+                "advanced-circuit",
+                "processing-unit",
                 "advanced-oil-processing",
                 "chemical-science-pack",
                 "production-science-pack",

@@ -96,11 +96,9 @@ class Prototype(enum.Enum, metaclass=PrototypeMetaclass):
         "bulk-inserter",
         ent.Inserter,
     )  # Factorio 2.0: old stack-inserter renamed to bulk-inserter
-    # Backwards compatibility aliases - map to closest equivalent
-    StackInserter = (
-        "bulk-inserter",
-        ent.Inserter,
-    )  # Factorio 2.0: old stack-inserter renamed to bulk-inserter
+    # Backwards compatibility aliases - map to closest equivalent.
+    # (No StackInserter alias: in 2.0 + Space Age "stack-inserter" is a
+    # distinct prototype, so aliasing it to bulk-inserter would be wrong.)
     FilterInserter = (
         "fast-inserter",
         ent.Inserter,
@@ -171,7 +169,8 @@ class Prototype(enum.Enum, metaclass=PrototypeMetaclass):
     StoneBrick = "stone-brick", None  # Crafting requires smelting 2 stone
     CopperCable = "copper-cable", None
     PlasticBar = "plastic-bar", None
-    EmptyBarrel = "empty-barrel", None
+    Barrel = "barrel", None  # Factorio 2.0: "empty-barrel" renamed to "barrel"
+    EmptyBarrel = "barrel", None  # Backwards-compatible alias of Barrel
     Battery = "battery", None
     SulfuricAcid = "sulfuric-acid", None
     Uranium235 = "uranium-235", None
@@ -183,7 +182,14 @@ class Prototype(enum.Enum, metaclass=PrototypeMetaclass):
         "advanced-oil-processing",
         None,
     )  # These are recipes, not prototypes.
-    CoalLiquifaction = "coal-liquifaction", None  # These are recipes, not prototypes.
+    CoalLiquefaction = (
+        "coal-liquefaction",
+        None,
+    )  # These are recipes, not prototypes.
+    CoalLiquifaction = (
+        "coal-liquefaction",
+        None,
+    )  # Backwards-compatible alias (misspelt) of CoalLiquefaction
     SolidFuel = "solid-fuel", None  # These are recipes, not prototypes.
     LightOil = "light-oil", None
     HeavyOil = "heavy-oil", None
@@ -226,9 +232,7 @@ class Prototype(enum.Enum, metaclass=PrototypeMetaclass):
 
     RocketSilo = "rocket-silo", ent.RocketSilo
     Rocket = "rocket", ent.Rocket
-    Satellite = "satellite", None
     RocketPart = "rocket-part", None
-    RocketControlUnit = "rocket-control-unit", None
     LowDensityStructure = "low-density-structure", None
     RocketFuel = "rocket-fuel", None
     SpaceSciencePack = "space-science-pack", None
@@ -322,8 +326,11 @@ class Technology(enum.Enum):
 
     # Circuit technologies
     # CircuitNetwork = "circuit-network"
-    AdvancedElectronics = "advanced-electronics"
-    AdvancedElectronics2 = "advanced-electronics-2"
+    # Factorio 2.0: advanced-electronics(-2) became advanced-circuit / processing-unit
+    AdvancedCircuit = "advanced-circuit"
+    ProcessingUnit = "processing-unit"
+    AdvancedElectronics = "advanced-circuit"  # Backwards-compatible alias
+    AdvancedElectronics2 = "processing-unit"  # Backwards-compatible alias
 
     # Power technologies
     Electronics = "electronics"
@@ -357,8 +364,8 @@ class Technology(enum.Enum):
     PowerArmor = "power-armor"
     PowerArmor2 = "power-armor-mk2"
     NightVision = "night-vision-equipment"
-    EnergyShield = "energy-shields"
-    EnergyShield2 = "energy-shields-mk2-equipment"
+    EnergyShield = "energy-shield-equipment"
+    EnergyShield2 = "energy-shield-mk2-equipment"
 
     # Train technologies
     RailwayTransportation = "railway"
@@ -403,12 +410,15 @@ class Technology(enum.Enum):
     # Inserter technologies
     FastInserter = "fast-inserter"
     StackInserter = "stack-inserter"
-    StackInserterCapacity1 = "stack-inserter-capacity-bonus-1"
-    StackInserterCapacity2 = "stack-inserter-capacity-bonus-2"
+    # Factorio 2.0: stack-inserter-capacity-bonus-N merged into inserter-capacity-bonus-N
+    InserterCapacityBonus1 = "inserter-capacity-bonus-1"
+    InserterCapacityBonus2 = "inserter-capacity-bonus-2"
+    StackInserterCapacity1 = "inserter-capacity-bonus-1"  # Backwards-compatible alias
+    StackInserterCapacity2 = "inserter-capacity-bonus-2"  # Backwards-compatible alias
 
     # Storage technologies
     StorageTanks = "fluid-handling"
-    BarrelFilling = "barrel-filling"
+    # Factorio 2.0: barrel-filling removed; barrels are unlocked by fluid-handling
     # Warehouses = "warehousing"
 
     # Vehicle technologies
@@ -417,7 +427,8 @@ class Technology(enum.Enum):
     # SpiderVehicle = "spidertron"
 
     # Weapon technologies
-    Grenades = "grenades"
+    # Factorio 2.0: grenades tech removed; grenade is unlocked by military-2
+    Military2 = "military-2"
     # ClusterGrenades = "cluster-grenades"
     # RocketLauncher = "rocketry"
     # ExplosiveRocketry = "explosive-rocketry"
@@ -428,15 +439,15 @@ class Technology(enum.Enum):
 
     # Misc technologies
     Landfill = "landfill"
-    CharacterInventorySlots = "character-inventory-slots"
-    ResearchSpeed = "research-speed"
-    # Toolbelt = "toolbelt"
+    # Factorio 2.0: character-inventory-slots does not exist (use toolbelt)
+    Toolbelt = "toolbelt"
+    ResearchSpeed1 = "research-speed-1"
+    ResearchSpeed = "research-speed-1"  # Backwards-compatible alias
     # BrakinPower = "braking-force"
 
     # # Endgame technologies
     SpaceScience = "space-science-pack"
     RocketFuel = "rocket-fuel"
-    RocketControl = "rocket-control-unit"
     LowDensityStructure = "low-density-structure"
     RocketSiloTechnology = "rocket-silo"
 

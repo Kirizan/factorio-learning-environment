@@ -121,7 +121,7 @@ class Prototype(enum.Enum):
     # Machines
     AssemblingMachine1/2/3, Centrifuge, ChemicalPlant, OilRefinery
     # Inserters
-    BurnerInserter, Inserter, FastInserter, LongHandedInserter, FilterInserter, StackInserter
+    BurnerInserter, Inserter, FastInserter, LongHandedInserter, BulkInserter
     # Mining
     BurnerMiningDrill, ElectricMiningDrill, PumpJack
     # Furnaces
@@ -149,7 +149,7 @@ class Prototype(enum.Enum):
     AutomationSciencePack, LogisticsSciencePack, ChemicalSciencePack
     MilitarySciencePack, ProductionSciencePack, UtilitySciencePack, SpaceSciencePack
     # Rocket
-    RocketSilo, Satellite, RocketPart, RocketControlUnit, LowDensityStructure, RocketFuel
+    RocketSilo, RocketPart, LowDensityStructure, RocketFuel
 
 class RecipeName(enum.Enum):
     # Oil processing
