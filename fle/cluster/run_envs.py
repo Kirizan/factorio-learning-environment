@@ -14,7 +14,8 @@ from platformdirs import user_state_dir
 
 START_RCON_PORT = 27000
 START_GAME_PORT = 34197
-RCON_PASSWORD = "factorio"
+# Override for servers that are not FLE-managed local containers.
+RCON_PASSWORD = os.environ.get("FACTORIO_RCON_PASSWORD", "factorio")
 
 
 def resolve_state_dir() -> Path:
