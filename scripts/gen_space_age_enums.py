@@ -48,7 +48,7 @@ TOOL_ITEM_TYPES = {
 # class named after the prototype itself (e.g. ent.Foundry for "foundry").
 TYPE_TO_CLASS = {
     "ammo-turret": "GunTurret",
-    "artillery-wagon": "RollingStock",
+    "artillery-wagon": "Wagon",
     "assembling-machine": "AssemblingMachine",
     "display-panel": "Entity",
     "electric-turret": "Turret",
@@ -70,8 +70,8 @@ TYPE_TO_CLASS = {
 # (robots are deployed by roboports, seeds are planted by agricultural towers).
 ITEM_ONLY_ENTITY_TYPES = {"construction-robot", "logistic-robot", "plant"}
 
-# Rolling stock in FLE uses a single orientation-agnostic footprint.
-DIMENSION_CHECK_EXEMPT = {"artillery-wagon"}
+# Prototypes whose FLE footprint intentionally differs from the game's.
+DIMENSION_CHECK_EXEMPT: set[str] = set()
 
 # Fluids pumped from tiles by an offshore pump (like water); tile data is not
 # part of the dump, so these are listed explicitly and checked against it.

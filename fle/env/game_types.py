@@ -222,7 +222,7 @@ class Prototype(enum.Enum, metaclass=PrototypeMetaclass):
 
     SmallElectricPole = "small-electric-pole", ent.ElectricityPole
     MediumElectricPole = "medium-electric-pole", ent.ElectricityPole
-    BigElectricPole = "big-electric-pole", ent.ElectricityPole
+    BigElectricPole = "big-electric-pole", ent.BigElectricityPole
 
     Coal = "coal", None
     Wood = "wood", None
@@ -331,14 +331,14 @@ class Prototype(enum.Enum, metaclass=PrototypeMetaclass):
     EfficiencyModule3 = "efficiency-module-3", None
 
     # Power
-    Substation = "substation", ent.ElectricityPole
+    Substation = "substation", ent.BigElectricityPole
     SteamTurbine = "steam-turbine", ent.Generator
 
     # Circuit Network
     ArithmeticCombinator = "arithmetic-combinator", ent.Combinator
     DeciderCombinator = "decider-combinator", ent.Combinator
-    ConstantCombinator = "constant-combinator", ent.Combinator
-    PowerSwitch = "power-switch", ent.Combinator
+    ConstantCombinator = "constant-combinator", ent.ConstantCombinator
+    PowerSwitch = "power-switch", ent.PowerSwitch
     ProgrammableSpeaker = "programmable-speaker", ent.Entity
 
     # Trains
@@ -346,8 +346,8 @@ class Prototype(enum.Enum, metaclass=PrototypeMetaclass):
     RailSignal = "rail-signal", ent.RailSignal
     RailChainSignal = "rail-chain-signal", ent.RailSignal
     Locomotive = "locomotive", ent.RollingStock
-    CargoWagon = "cargo-wagon", ent.RollingStock
-    FluidWagon = "fluid-wagon", ent.RollingStock
+    CargoWagon = "cargo-wagon", ent.Wagon
+    FluidWagon = "fluid-wagon", ent.Wagon
 
     # Logistics
     Roboport = "roboport", ent.Roboport
@@ -355,12 +355,12 @@ class Prototype(enum.Enum, metaclass=PrototypeMetaclass):
     # Defense
     LaserTurret = "laser-turret", ent.Turret
     FlamethrowerTurret = "flamethrower-turret", ent.FluidTurret
-    ArtilleryTurret = "artillery-turret", ent.Turret
+    ArtilleryTurret = "artillery-turret", ent.ArtilleryTurret
     LandMine = "land-mine", ent.Entity
 
     # Vehicles
     Car = "car", ent.Vehicle
-    Tank = "tank", ent.Vehicle
+    Tank = "tank", ent.Tank
     Spidertron = "spidertron", ent.Vehicle
 
     # --- BEGIN GENERATED: space-age (scripts/gen_space_age_enums.py) ---
@@ -372,7 +372,7 @@ class Prototype(enum.Enum, metaclass=PrototypeMetaclass):
     ArtificialYumakoSoil = "artificial-yumako-soil", None
     ArtilleryShell = "artillery-shell", None
     ArtilleryTargetingRemote = "artillery-targeting-remote", None
-    ArtilleryWagon = "artillery-wagon", ent.RollingStock
+    ArtilleryWagon = "artillery-wagon", ent.Wagon
     AsteroidCollector = "asteroid-collector", ent.AsteroidCollector
     AtomicBomb = "atomic-bomb", None
     BatteryEquipment = "battery-equipment", None

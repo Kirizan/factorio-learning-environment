@@ -1119,6 +1119,53 @@ class Vehicle(Entity, BurnerType):
     _width: float = 2
 
 
+# --- Size variants ---------------------------------------------------------
+# Some prototypes share a behaviour class but not a footprint. Agents read the
+# footprint through Prototype.X.WIDTH / HEIGHT, so it must match the game.
+
+
+class BigElectricityPole(ElectricityPole):
+    """Big electric pole or substation (2x2)."""
+
+    _height: float = 2
+    _width: float = 2
+
+
+class ConstantCombinator(Combinator):
+    """Constant combinator (1x1)."""
+
+    _height: float = 1
+    _width: float = 1
+
+
+class PowerSwitch(Combinator):
+    """Power switch (2x2)."""
+
+    _height: float = 2
+    _width: float = 2
+
+
+class Wagon(RollingStock):
+    """Cargo, fluid or artillery wagon (5x2; locomotives are 6x2)."""
+
+    _height: float = 2
+    _width: float = 5
+
+
+class Tank(Vehicle):
+    """Tank (3x2)."""
+
+    _height: float = 2
+    _width: float = 3
+
+
+class ArtilleryTurret(Turret):
+    """Artillery turret (3x3)."""
+
+    _height: float = 3
+    _width: float = 3
+
+
 # --- Space Age entities -----------------------------------------------------
 # Minimal classes for Factorio 2.0 Space Age prototypes. Where a prototype
 # behaves like an existing entity they subclass it and only override the tile

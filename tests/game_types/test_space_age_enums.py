@@ -144,18 +144,9 @@ def test_namespace_imports_cleanly():
 
 # Pre-existing FLE footprints that disagree with the 2.0 prototypes (beyond a
 # plain rotation). Tracked separately; new members must match the dump.
-KNOWN_FOOTPRINT_MISMATCHES = {
-    "offshore-pump",
-    "big-electric-pole",
-    "substation",
-    "constant-combinator",
-    "power-switch",
-    "cargo-wagon",
-    "fluid-wagon",
-    "artillery-wagon",
-    "tank",
-    "artillery-turret",
-}
+# offshore-pump: the game reports a 1x1 tile footprint, but FLE models it as
+# 2x1 and its placement logic depends on that; left for a separate change.
+KNOWN_FOOTPRINT_MISMATCHES = {"offshore-pump"}
 
 
 def test_entity_footprints_match_dump(dump):
