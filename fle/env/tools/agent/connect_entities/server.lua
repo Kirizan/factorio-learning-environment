@@ -10,7 +10,7 @@ local MAX_UNDERGROUND_SEGMENTS = 50
 -- so storage.actions.connect_entities sets it on entry and helpers read it.
 local current_surface = nil
 local function active_surface()
-    return current_surface or active_surface()
+    return current_surface or game.surfaces[1]
 end
 
 -- Wire reach values for different electric pole types
