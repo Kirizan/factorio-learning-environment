@@ -25,7 +25,8 @@ _STORAGE_PREFIX = "local storage = fle_runtime.storage "
 def long_bracket(source: str) -> str:
     """Quote `source` as a Lua long string that cannot be closed early."""
     level = 0
-    while f"]{'=' * level}]" in source:
+    # The closing bracket must not appear inside, nor form across the end (source ending in "]").
+    while f"]{'=' * level}]" in source + "]":
         level += 1
     eq = "=" * level
     # A leading newline after [[ is dropped by Lua, so add one to keep it.

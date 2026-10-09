@@ -22,6 +22,8 @@ def test_long_bracket_cannot_be_closed_early():
     assert long_bracket("a") == "[[\na]]"
     assert long_bracket("x]]y") == "[=[\nx]]y]=]"
     assert long_bracket("x]]y]=]z") == "[==[\nx]]y]=]z]==]"
+    # A trailing "]" would merge with the closing bracket.
+    assert long_bracket("t[1]") == "[=[\nt[1]]=]"
 
 
 def test_exec_command_quotes_name_and_source():
