@@ -111,7 +111,7 @@ storage.actions.craft_item = function(player_index, entity, count)
 
     local function update_production_stats(force, recipe, crafts_count)
         -- Factorio 2.0: production_statistics is now a method requiring surface parameter
-        local surface = game.surfaces[1]
+        local surface = storage.utils.agent_surface(player_index)
         local stats = force.get_item_production_statistics(surface)
         local craft_stats = {crafted_count = crafts_count, inputs = {}, outputs = {}}
         for _, ingredient in pairs(recipe.ingredients) do

@@ -31,14 +31,11 @@ end
 
 -- Create agent characters script
 storage.actions.create_agent_characters = function(num_agents)
-    -- delete all character entities on the surface
-    for _, entity in pairs(game.surfaces[1].find_entities_filtered{type = "character"}) do
-        entity.destroy()
-    end
-
-    -- Initialize agent characters table
-    for _, entity in pairs(game.surfaces[1].find_entities_filtered{type = "character"}) do
-        entity.destroy()
+    -- delete all character entities on every surface
+    for _, surface in pairs(game.surfaces) do
+        for _, entity in pairs(surface.find_entities_filtered{type = "character"}) do
+            entity.destroy()
+        end
     end
     -- Destroy existing agent characters if they exist
     if storage.agent_characters then

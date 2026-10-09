@@ -612,7 +612,6 @@ storage.utils.serialize_recipe = function(recipe)
 end
 
 storage.utils.serialize_entity = function(entity)
-
     if entity == nil then
         return {}
     end
@@ -621,6 +620,8 @@ storage.utils.serialize_entity = function(entity)
     if not entity.valid then
         error("Cannot serialize entity: LuaEntity is no longer valid (entity may have been destroyed or removed)")
     end
+    -- The entity's own surface (planets, space platforms), captured before any shadowing
+    local entity_surface = entity.surface
     --game.print("Serializing entity: " .. entity.name .. " with direction: " .. entity.direction)
     local direction = entity.direction
 
@@ -1015,7 +1016,7 @@ storage.utils.serialize_entity = function(entity)
         -- Filter out any invalid connection points
         local filtered_input_points = {}
         for _, point in ipairs(serialized.input_connection_points) do
-            if is_valid_connection_point(game.surfaces[1], point) then
+            if is_valid_connection_point(entity_surface, point) then
                 table.insert(filtered_input_points, point)
             end
         end
@@ -1024,7 +1025,7 @@ storage.utils.serialize_entity = function(entity)
         -- Filter out any invalid connection points
         local filtered_output_points = {}
         for _, point in ipairs(serialized.output_connection_points) do
-            if is_valid_connection_point(game.surfaces[1], point) then
+            if is_valid_connection_point(entity_surface, point) then
                 table.insert(filtered_output_points, point)
             end
         end
@@ -1097,7 +1098,7 @@ storage.utils.serialize_entity = function(entity)
         -- Filter out any invalid connection points
         local filtered_connection_points = {}
         for _, point in ipairs(serialized.connection_points) do
-            if is_valid_connection_point(game.surfaces[1], point) then
+            if is_valid_connection_point(entity_surface, point) then
                 table.insert(filtered_connection_points, point)
             end
         end
@@ -1137,7 +1138,7 @@ storage.utils.serialize_entity = function(entity)
         local end_x = position.x + mining_area/2
         local end_y = position.y + mining_area/2
 
-        local resources = game.surfaces[1].find_entities_filtered{
+        local resources = entity_surface.find_entities_filtered{
             area = {{start_x, start_y}, {end_x, end_y}},
             type = "resource",
         }
@@ -1371,7 +1372,7 @@ storage.utils.serialize_entity = function(entity)
     if serialized.connection_points then
         local filtered_points = {}
         for _, point in ipairs(serialized.connection_points) do
-            if is_valid_connection_point(game.surfaces[1], point) then
+            if is_valid_connection_point(entity_surface, point) then
                 table.insert(filtered_points, point)
             end
         end
@@ -1397,7 +1398,7 @@ storage.utils.serialize_entity = function(entity)
 
     -- Handle special case for boilers which have separate steam output points
     if serialized.steam_output_point then
-        if not is_valid_connection_point(game.surfaces[1], serialized.steam_output_point) then
+        if not is_valid_connection_point(entity_surface, serialized.steam_output_point) then
             serialized.steam_output_point = nil
             if not serialized.warnings then
                 serialized.warnings = {}

@@ -5,7 +5,7 @@ storage.actions.save_blueprint = function(player_index)
         return nil, "Force not found"
     end
 
-    local surface = game.surfaces[1] -- Get primary surface
+    local surface = storage.utils.agent_surface(player_index)
     local entities = surface.find_entities_filtered{force = force}
 
     if #entities == 0 then
