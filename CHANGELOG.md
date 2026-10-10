@@ -5,6 +5,16 @@ All notable changes to the Factorio Learning Environment will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3+kirizan.3] - 2026-10-10 (Kirizan fork)
+
+### Added
+
+- `storage.alerts_scan_period` (ticks between alert scans, default 60; invalid values fall back to 60).
+
+### Fixed
+
+- A bare call to an undefined name (e.g. a misspelled tool) raises `NameError` instead of being skipped silently.
+
 ## [0.4.3+kirizan.2] - 2026-10-10 (Kirizan fork)
 
 ### Added
