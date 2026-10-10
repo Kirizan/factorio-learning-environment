@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Persistent attach no longer changes game speed or pause state, removes enemies, or clears the crafting queue
   and alerts.
 - Injected event handlers are kept per source script instead of replacing each other.
+- `fle_runtime` contains errors in injected event handlers (`pcall`) instead of letting them end the game:
+  `fle_runtime.handler_errors()` / `clear_handler_errors()`.
 
 ## [0.4.3+kirizan.1] - 2026-10-10 (Kirizan fork)
 
