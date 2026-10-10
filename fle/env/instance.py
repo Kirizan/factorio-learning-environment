@@ -561,7 +561,7 @@ class FactorioInstance:
             "if not (c and c.valid) then "
             "local s = game.surfaces[1] "
             "local p = s.find_non_colliding_position('character', {x = 0, y = (i - 1) * 2}, 50, 0.5) "
-            "storage.agent_characters[i] = s.create_entity{name = 'character', position = p, force = game.forces.player} "
+            "if p then storage.agent_characters[i] = s.create_entity{name = 'character', position = p, force = game.forces.player} end "
             "end end"
         )
 
