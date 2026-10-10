@@ -45,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Opt-in Space Age DLC for cluster servers (`FLE_DLC=1`); RCON password override (`FACTORIO_RCON_PASSWORD`).
 - `fle_runtime`: injected Lua survives saves, reloads and multiplayer joins (sources recorded in `storage`, replayed
   on load; function tables kept out of `storage`; `RuntimeAwareRCON`). Only sources that ran successfully are recorded.
+  Event handlers are kept per source script, and errors in injected handlers are contained (`pcall`) instead of
+  ending the game: `fle_runtime.handler_errors()` / `clear_handler_errors()`, `fle_runtime.handlers()`.
 
 ### Fixed
 
