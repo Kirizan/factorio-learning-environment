@@ -1,4 +1,4 @@
-storage.alerts = {}
+storage.alerts = storage.alerts or {}
 
 -- Define a function to check if the transport belt is blocked
 local function is_transport_belt_blocked(entity)
