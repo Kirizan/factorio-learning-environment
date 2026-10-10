@@ -214,12 +214,15 @@ end
 
 --- Errors raised by injected event handlers, as source -> {message, tick, count}.
 function lib.handler_errors()
-  return storage.fle_runtime.handler_errors or {}
+  local store = storage.fle_runtime
+  return store and store.handler_errors or {}
 end
 
 --- Forget recorded handler errors (after they have been reported).
 function lib.clear_handler_errors()
-  storage.fle_runtime.handler_errors = nil
+  if storage.fle_runtime then
+    storage.fle_runtime.handler_errors = nil
+  end
 end
 
 --- Registered injected handlers, as {[event id or "nth:<period>"] = {source, ...}}.
