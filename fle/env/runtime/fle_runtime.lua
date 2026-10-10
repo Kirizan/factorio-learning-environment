@@ -120,12 +120,16 @@ local lib = {}
 
 --- Record `source` under `name` and run it. Re-sending a name replaces it.
 function lib.exec(name, source)
+  -- A save made before the scenario gained the runtime never ran on_init.
+  storage.fle_runtime = storage.fle_runtime or { sources = {}, order = {} }
   local store = storage.fle_runtime
+  -- Record only sources that ran: a failing chunk would otherwise be
+  -- replayed, and fail again, on every load. run() re-raises the error.
+  run(name, source)
   if not store.sources[name] then
     store.order[#store.order + 1] = name
   end
   store.sources[name] = source
-  run(name, source)
 end
 
 --- Forget every recorded source (e.g. before a full tool reload).
