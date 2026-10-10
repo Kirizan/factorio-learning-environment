@@ -5,6 +5,47 @@ All notable changes to the Factorio Learning Environment will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3+kirizan.3] - 2026-10-10 (Kirizan fork)
+
+### Added
+
+- `storage.alerts_scan_period` (ticks between alert scans, default 60; invalid values fall back to 60).
+
+### Fixed
+
+- A bare call to an undefined name (e.g. a misspelled tool) raises `NameError` instead of being skipped silently.
+
+## [0.4.3+kirizan.2] - 2026-10-10 (Kirizan fork)
+
+### Added
+
+- Space Age enums generated from a prototype dump (`scripts/gen_space_age_enums.py`), real entity footprints.
+- Multi-surface tools (`storage.utils.agent_surface`), production stats summed across surfaces.
+- `FactorioInstance(persistent=True)`: attach to a long-lived game without resetting it.
+
+### Fixed
+
+- Persistent attach no longer changes game speed or pause state, removes enemies, or clears the crafting queue
+  and alerts.
+- Injected event handlers are kept per source script instead of replacing each other.
+- `fle_runtime` contains errors in injected event handlers (`pcall`) instead of letting them end the game:
+  `fle_runtime.handler_errors()` / `clear_handler_errors()`.
+
+## [0.4.3+kirizan.1] - 2026-10-10 (Kirizan fork)
+
+### Added
+
+- Opt-in Space Age DLC for cluster servers (`FLE_DLC=1`); RCON password override (`FACTORIO_RCON_PASSWORD`).
+- `fle_runtime`: injected Lua survives saves, reloads and multiplayer joins (sources recorded in `storage`, replayed
+  on load; function tables kept out of `storage`; `RuntimeAwareRCON`). Only sources that ran successfully are recorded.
+
+### Fixed
+
+- Pin `a2a-sdk<1` (1.x broke imports).
+- The alert scan ended the game with a non-recoverable `on_tick` error on Space Age machines with fluid
+  ingredients (foundry, cryogenic plant, ...): it now uses the ingredient's type.
+- Lua long strings for sources ending in `]`.
+
 ## [0.4.2] - 2026-03-27
 
 ### Added
