@@ -190,7 +190,9 @@ class FactorioInstance:
         """
         :param persistent: Attach to an existing, long-lived game without
             resetting it: no research/inventory/resource reset, characters are
-            only created if missing, no always_day, no chunk pre-generation.
+            only created if missing, no always_day, no chunk pre-generation,
+            game speed and pause state untouched, enemies left alone
+            (`peaceful` is ignored), crafting queue and alerts kept.
             For runs that span many connections (e.g. a harness resuming after
             a restart). Default False keeps the episodic benchmark behaviour.
         """
@@ -214,7 +216,8 @@ class FactorioInstance:
         self.game_control = GameControl(
             self.rcon_client, render_message_tool, reset_speed, reset_paused
         )
-        self.game_control.reset_to_defaults()
+        if not persistent:
+            self.game_control.reset_to_defaults()
 
         self.lua_script_manager = LuaScriptManager(self.rcon_client, cache_scripts)
         self.script_dict = {
@@ -527,11 +530,13 @@ class FactorioInstance:
         for script_name in init_scripts:
             self.lua_script_manager.load_init_into_game(script_name)
 
-        if self.peaceful:
-            self.rcon_client.send_command("/sc storage.utils.remove_enemies()")
-
         if self.persistent:
             return
+
+        # Episodic runs start clean (the init scripts keep existing state).
+        self.rcon_client.send_command("/sc storage.crafting_queue = {} storage.alerts = {}")
+        if self.peaceful:
+            self.rcon_client.send_command("/sc storage.utils.remove_enemies()")
 
         # Generate chunks around origin to enable long-distance pathfinding
         # 4000 tiles in each direction = 125 chunks (each chunk is 32x32 tiles)

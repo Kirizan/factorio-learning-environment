@@ -167,7 +167,7 @@ storage.utils.avoid_entity = function(player_index, entity, position, direction)
     return false
 end
 
-storage.crafting_queue = {}
+storage.crafting_queue = storage.crafting_queue or {}
 
 script.on_event(defines.events.on_tick, function(event)
   -- Iterate over the crafting queue and update the remaining ticks
