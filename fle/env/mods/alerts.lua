@@ -324,15 +324,6 @@ function storage.utils.get_issues(entity)
     end
     return issues
 end
-function is_not_fluid(name)
-    local items = { "crude-oil", "petroleum-gas", "sulfuric-acid", "water", "steam", "light-oil", "heavy-oil", "lubricant" }
-    for _,v in pairs(items) do
-      if v == name then
-        return false
-      end
-    end
-    return true
-end
 -- Define a function to check if the entity is an assembler machine and lacks resources
 function lacks_assembler_resources(entity)
     if entity.type == "assembling-machine" then
@@ -343,14 +334,13 @@ function lacks_assembler_resources(entity)
             local missing_resources = {}
 
             for _, ingredient in pairs(ingredients) do
-                -- don't perform a check in the case of liquids like crude-oil, water etc.
-                if is_not_fluid(ingredient.name) then
-                    if prototypes.item[ingredient.name].type ~= "fluid" then
-                        local available_amount = input_inventory.get_item_count(ingredient.name)
-                        local missing_amount = ingredient.amount - available_amount
-                        if missing_amount > 0 then
-                            table.insert(missing_resources, ingredient.name .. " (" .. tostring(missing_amount) .. ")")
-                        end
+                -- Fluids are not in the input inventory (Space Age adds many:
+                -- molten metals, ammonia, fluoroketone, ...).
+                if ingredient.type ~= "fluid" then
+                    local available_amount = input_inventory.get_item_count(ingredient.name)
+                    local missing_amount = ingredient.amount - available_amount
+                    if missing_amount > 0 then
+                        table.insert(missing_resources, ingredient.name .. " (" .. tostring(missing_amount) .. ")")
                     end
                 end
             end
