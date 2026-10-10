@@ -25,9 +25,10 @@ local runtime = {
   fns = {}, -- non-persisted: function-valued storage keys (actions, utils, ...)
   replaying = false,
   replay_errors = {}, -- name -> error message from the last on_load replay
-  event_handlers = {}, -- event id -> FLE handler
-  base_handlers = {}, -- event id -> scenario handler captured before FLE's
-  nth_handlers = {}, -- tick period -> FLE handler
+  current_source = nil, -- name of the script being run (owner of handlers it registers)
+  event_handlers = {}, -- event id -> ordered list of {source, fn}
+  base_handlers = {}, -- event id -> scenario handler captured before FLE's (or false)
+  nth_handlers = {}, -- tick period -> ordered list of {source, fn}
 }
 
 -- Keys whose tables hold functions. Anything assigned a function value is
@@ -54,58 +55,120 @@ local storage_proxy = setmetatable({}, {
   end,
 })
 
+-- Handlers are kept per source script, so several scripts can listen to the
+-- same event (in the order they were first registered) and re-sending a
+-- script replaces only its own handler.
+local function set_handler(list, source, fn)
+  for i, entry in ipairs(list) do
+    if entry.source == source then
+      if fn then
+        entry.fn = fn
+      else
+        table.remove(list, i)
+      end
+      return
+    end
+  end
+  if fn then
+    list[#list + 1] = { source = source, fn = fn }
+  end
+end
+
+-- An error in an event handler ends the whole game ("non-recoverable error"),
+-- so injected handlers run protected: a failure is recorded in
+-- storage.fle_runtime.handler_errors (source -> {message, tick, count}) and the
+-- other handlers still run. pcall is deterministic, so clients stay in sync.
+local function call_handler(entry, event)
+  local ok, err = pcall(entry.fn, event)
+  if ok then
+    return
+  end
+  local store = storage.fle_runtime
+  store.handler_errors = store.handler_errors or {}
+  local record = store.handler_errors[entry.source]
+  if record then
+    record.count = record.count + 1
+    record.message = tostring(err)
+    record.tick = event.tick
+  else
+    store.handler_errors[entry.source] = { message = tostring(err), tick = event.tick, count = 1 }
+  end
+end
+
 local function dispatch_event(event)
   local base = runtime.base_handlers[event.name]
   if base then
     base(event)
   end
-  local handler = runtime.event_handlers[event.name]
-  if handler then
-    handler(event)
+  local list = runtime.event_handlers[event.name]
+  if list then
+    for _, entry in ipairs(list) do
+      call_handler(entry, event)
+    end
   end
 end
 
+local function dispatch_nth(event)
+  local list = runtime.nth_handlers[event.nth_tick]
+  if list then
+    for _, entry in ipairs(list) do
+      call_handler(entry, event)
+    end
+  end
+end
+
+local function register_event(event, handler, filters)
+  local list = runtime.event_handlers[event] or {}
+  runtime.event_handlers[event] = list
+  if runtime.base_handlers[event] == nil then
+    runtime.base_handlers[event] = script.get_event_handler(event) or false
+  end
+  set_handler(list, runtime.current_source or "?", handler)
+  if #list > 0 or runtime.base_handlers[event] then
+    script.on_event(event, dispatch_event, filters)
+  else
+    script.on_event(event, nil)
+  end
+end
+
+local function register_nth(tick, handler)
+  local list = runtime.nth_handlers[tick] or {}
+  runtime.nth_handlers[tick] = list
+  set_handler(list, runtime.current_source or "?", handler)
+  script.on_nth_tick(tick, #list > 0 and dispatch_nth or nil)
+end
+
 -- `script` as seen by FLE code: event registration is multiplexed, the rest
--- is forwarded to the real LuaBootstrap.
+-- is forwarded to the real LuaBootstrap. Scenario code must not use
+-- on_nth_tick periods that injected scripts use (they would replace it).
 local script_proxy = setmetatable({
   on_event = function(event, handler, filters)
     if type(event) == "table" then
       for _, e in pairs(event) do
-        runtime.event_handlers[e] = handler
-        if runtime.base_handlers[e] == nil then
-          runtime.base_handlers[e] = script.get_event_handler(e) or false
-        end
-        script.on_event(e, dispatch_event)
+        register_event(e, handler)
       end
       return
     end
-    runtime.event_handlers[event] = handler
-    if runtime.base_handlers[event] == nil then
-      runtime.base_handlers[event] = script.get_event_handler(event) or false
-    end
-    script.on_event(event, dispatch_event, filters)
+    register_event(event, handler, filters)
   end,
   on_nth_tick = function(tick, handler)
-    -- Scenario libs must not use on_nth_tick periods FLE uses; FLE owns them.
-    if type(tick) == "table" then
-      for _, t in pairs(tick) do
-        runtime.nth_handlers[t] = handler
-        script.on_nth_tick(t, handler)
+    if tick == nil then
+      -- Clear only the calling script's periodic handlers.
+      for period, _ in pairs(runtime.nth_handlers) do
+        register_nth(period, nil)
       end
       return
     end
-    if tick == nil then
-      script.on_nth_tick(nil)
-      runtime.nth_handlers = {}
+    if type(tick) == "table" then
+      for _, t in pairs(tick) do
+        register_nth(t, handler)
+      end
       return
     end
-    runtime.nth_handlers[tick] = handler
-    script.on_nth_tick(tick, handler)
+    register_nth(tick, handler)
   end,
 }, { __index = function(_, key) return script[key] end })
 
--- Globals the scripts define (e.g. FLE's `dump`) land in the level environment
--- so console commands see them; only `storage` and `script` are overridden.
 local env = setmetatable({ storage = storage_proxy, script = script_proxy }, { __index = _ENV, __newindex = _ENV })
 
 local function run(name, source)
@@ -113,7 +176,13 @@ local function run(name, source)
   if not chunk then
     error("fle_runtime: cannot load " .. name .. ": " .. err)
   end
-  chunk()
+  local previous = runtime.current_source
+  runtime.current_source = name
+  local ok, run_err = pcall(chunk)
+  runtime.current_source = previous
+  if not ok then
+    error(run_err, 0)
+  end
 end
 
 local lib = {}
@@ -141,6 +210,36 @@ end
 --- Sources whose replay failed during the last on_load, as name -> error.
 function lib.replay_errors()
   return runtime.replay_errors
+end
+
+--- Errors raised by injected event handlers, as source -> {message, tick, count}.
+function lib.handler_errors()
+  return storage.fle_runtime.handler_errors or {}
+end
+
+--- Forget recorded handler errors (after they have been reported).
+function lib.clear_handler_errors()
+  storage.fle_runtime.handler_errors = nil
+end
+
+--- Registered injected handlers, as {[event id or "nth:<period>"] = {source, ...}}.
+function lib.handlers()
+  local out = {}
+  for event, list in pairs(runtime.event_handlers) do
+    local names = {}
+    for _, entry in ipairs(list) do
+      names[#names + 1] = entry.source
+    end
+    out[event] = names
+  end
+  for tick, list in pairs(runtime.nth_handlers) do
+    local names = {}
+    for _, entry in ipairs(list) do
+      names[#names + 1] = entry.source
+    end
+    out["nth:" .. tick] = names
+  end
+  return out
 end
 
 lib.storage = storage_proxy
