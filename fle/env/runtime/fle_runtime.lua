@@ -74,6 +74,27 @@ local function set_handler(list, source, fn)
   end
 end
 
+-- An error in an event handler ends the whole game ("non-recoverable error"),
+-- so injected handlers run protected: a failure is recorded in
+-- storage.fle_runtime.handler_errors (source -> {message, tick, count}) and the
+-- other handlers still run. pcall is deterministic, so clients stay in sync.
+local function call_handler(entry, event)
+  local ok, err = pcall(entry.fn, event)
+  if ok then
+    return
+  end
+  local store = storage.fle_runtime
+  store.handler_errors = store.handler_errors or {}
+  local record = store.handler_errors[entry.source]
+  if record then
+    record.count = record.count + 1
+    record.message = tostring(err)
+    record.tick = event.tick
+  else
+    store.handler_errors[entry.source] = { message = tostring(err), tick = event.tick, count = 1 }
+  end
+end
+
 local function dispatch_event(event)
   local base = runtime.base_handlers[event.name]
   if base then
@@ -82,7 +103,7 @@ local function dispatch_event(event)
   local list = runtime.event_handlers[event.name]
   if list then
     for _, entry in ipairs(list) do
-      entry.fn(event)
+      call_handler(entry, event)
     end
   end
 end
@@ -91,7 +112,7 @@ local function dispatch_nth(event)
   local list = runtime.nth_handlers[event.nth_tick]
   if list then
     for _, entry in ipairs(list) do
-      entry.fn(event)
+      call_handler(entry, event)
     end
   end
 end
@@ -185,6 +206,16 @@ end
 --- Sources whose replay failed during the last on_load, as name -> error.
 function lib.replay_errors()
   return runtime.replay_errors
+end
+
+--- Errors raised by injected event handlers, as source -> {message, tick, count}.
+function lib.handler_errors()
+  return storage.fle_runtime.handler_errors or {}
+end
+
+--- Forget recorded handler errors (after they have been reported).
+function lib.clear_handler_errors()
+  storage.fle_runtime.handler_errors = nil
 end
 
 --- Registered injected handlers, as {[event id or "nth:<period>"] = {source, ...}}.
