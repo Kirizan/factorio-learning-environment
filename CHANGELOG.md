@@ -5,6 +5,23 @@ All notable changes to the Factorio Learning Environment will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3+kirizan.4] - 2026-10-10 (Kirizan fork)
+
+### Changed
+
+- Pin Factorio 2.0.77, the current stable release (`run_envs.py`, `run-envs.sh`, sandbox `Dockerfile`).
+  Prototype data is identical to 2.0.73.
+
+### Fixed
+
+- The alert scan (`alerts.lua`) ended the game with a non-recoverable `on_tick` error on Space Age
+  machines with fluid ingredients (foundry, cryogenic plant, ...): it now uses the ingredient's type.
+
+### Added
+
+- `fle_runtime` contains errors in injected event handlers instead of letting them end the game:
+  `fle_runtime.handler_errors()` / `clear_handler_errors()`.
+
 ## [0.4.2] - 2026-03-27
 
 ### Added
