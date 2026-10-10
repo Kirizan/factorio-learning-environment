@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Pin `a2a-sdk<1` (1.x broke imports).
+- The alert scan ended the game with a non-recoverable `on_tick` error on Space Age machines with fluid
+  ingredients (foundry, cryogenic plant, ...): it now uses the ingredient's type.
+- Lua long strings for sources ending in `]`.
 
 ## [0.4.2] - 2026-03-27
 
