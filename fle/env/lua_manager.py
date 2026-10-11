@@ -38,8 +38,14 @@ class LuaScriptManager:
 
     def init_action_checksums(self):
         checksum_init_script = _load_mods("checksum")
-        response = self.rcon_client.send_command("/sc " + checksum_init_script)
-        return response
+        return self._inject("checksum", checksum_init_script)
+
+    def _inject(self, name: str, script: str, prefix: str = "/sc"):
+        """Send a defining script; recorded for replay if the scenario has fle_runtime."""
+        inject = getattr(self.rcon_client, "inject", None)
+        if inject is not None:
+            return inject(name, script, prefix)
+        return self.rcon_client.send_command(f"{prefix} {script}")
 
     def check_lua_syntax(self, script):
         try:
@@ -88,7 +94,7 @@ class LuaScriptManager:
                 raise Exception(f"Syntax error in: {script_name}: {error}")
             print(f"{self.rcon_client.port}: Loading action {script_name} into game")
 
-            response = self.rcon_client.send_command("/sc " + script)
+            response = self._inject(script_name, script)
 
             if response and "error" in response.lower():
                 raise Exception(response)
@@ -106,7 +112,7 @@ class LuaScriptManager:
                 return
             self.update_game_checksum(self.rcon_client, name, checksum)
 
-        response = self.rcon_client.send_command("/c " + script)
+        response = self._inject(name, script, prefix="/c")
 
         if response and "error" in response.lower():
             raise Exception(response)

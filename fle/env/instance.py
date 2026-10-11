@@ -24,6 +24,7 @@ from fle.env.utils.controller_loader.system_prompt_generator import (
     SystemPromptGenerator,
 )
 from fle.cluster.run_envs import START_RCON_PORT, RCON_PASSWORD
+from fle.env.runtime import RuntimeAwareRCON
 
 CHUNK_SIZE = 32
 MAX_SAMPLES = 5000
@@ -389,6 +390,7 @@ class FactorioInstance:
             rcon_client = RCONClient("localhost", tcp_port, RCON_PASSWORD)
             address = "localhost"
 
+        rcon_client = RuntimeAwareRCON(rcon_client)
         try:
             rcon_client.connect()
             rcon_client.send_command("/sc rcon.print(#game.players)")

@@ -389,15 +389,21 @@ end
 
 storage.goal = nil
 
-local scores = production_score.get_production_scores()
-if scores then
-    storage.initial_score = scores
+-- Initial-score bookkeeping needs `game`; skip it when the script is replayed
+-- in on_load (fle_runtime), where the values are already in the save.
+if game then
+    local scores = production_score.get_production_scores()
+    if scores then
+        storage.initial_score = scores
+    end
 end
 
 -- Store initial harvested and crafted values for delta calculation
-local price_list = production_score.generate_price_list()
-storage.initial_harvested_value = get_harvested_value(price_list)
-storage.initial_crafted_net_value = get_crafted_net_value(price_list)
+if game then
+    local price_list = production_score.generate_price_list()
+    storage.initial_harvested_value = get_harvested_value(price_list)
+    storage.initial_crafted_net_value = get_crafted_net_value(price_list)
+end
 
 storage.actions.score = function()
     local price_list = production_score.generate_price_list()

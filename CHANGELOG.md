@@ -5,6 +5,23 @@ All notable changes to the Factorio Learning Environment will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3+kirizan.1] - 2026-10-10 (Kirizan fork)
+
+### Added
+
+- Opt-in Space Age DLC for cluster servers (`FLE_DLC=1`); RCON password override (`FACTORIO_RCON_PASSWORD`).
+- `fle_runtime`: injected Lua survives saves, reloads and multiplayer joins (sources recorded in `storage`, replayed
+  on load; function tables kept out of `storage`; `RuntimeAwareRCON`). Only sources that ran successfully are recorded.
+  Event handlers are kept per source script, and errors in injected handlers are contained (`pcall`) instead of
+  ending the game: `fle_runtime.handler_errors()` / `clear_handler_errors()`, `fle_runtime.handlers()`.
+
+### Fixed
+
+- Pin `a2a-sdk<1` (1.x broke imports).
+- The alert scan ended the game with a non-recoverable `on_tick` error on Space Age machines with fluid
+  ingredients (foundry, cryogenic plant, ...): it now uses the ingredient's type.
+- Lua long strings for sources ending in `]`.
+
 ## [0.4.2] - 2026-03-27
 
 ### Added
