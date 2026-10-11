@@ -27,12 +27,14 @@ storage.actions.set_entity_recipe = function(player_index, recipe_name, x, y)
             -- Factorio 2.0: all inserters can filter, enable filtering and set the filter
             closest_building.use_filters = true
             closest_building.set_filter(1, recipe_name)  -- Set first filter slot
+            storage.utils.raise_entity_changed(closest_building)
             serialized = storage.utils.serialize_entity(closest_building)
         else
             -- Original assembling machine logic
             local recipe = player.force.recipes[recipe_name]
             if recipe and closest_building.get_recipe() ~= recipe then
                 closest_building.set_recipe(recipe_name)
+                storage.utils.raise_entity_changed(closest_building)
             end
             serialized = storage.utils.serialize_entity(closest_building)
         end

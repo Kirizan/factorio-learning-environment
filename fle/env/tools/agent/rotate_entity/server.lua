@@ -95,15 +95,18 @@ storage.actions.rotate_entity = function(player_index, x, y, direction, entity)
             end
 
             -- Destroy the entity
-            closest_entity.destroy()
+            closest_entity.destroy{raise_destroy = true}
 
-            -- Create new entity with target direction
+            -- Create new entity with target direction. script_raised_built
+            -- is raised only once its state is restored (below): a handler
+            -- that throws or destroys it must not lose inputs or modules.
             local new_entity = surface.create_entity{
                 name = saved_name,
                 position = saved_position,
                 direction = target,
                 force = saved_force,
-                create_build_effect_smoke = false
+                create_build_effect_smoke = false,
+                raise_built = false,
             }
 
             if new_entity then
@@ -142,6 +145,10 @@ storage.actions.rotate_entity = function(player_index, x, y, direction, entity)
                     end
                 end
 
+                script.raise_script_built{entity = new_entity}
+                if not new_entity.valid then
+                    error("rotate_entity: the rotated " .. saved_name .. " was removed by a script")
+                end
                 closest_entity = new_entity
             end
         end
@@ -171,8 +178,9 @@ storage.actions.rotate_entity = function(player_index, x, y, direction, entity)
     }
 
     if entity_position.x ~= aligned_position.x or entity_position.y ~= aligned_position.y then
-        closest_entity.teleport(aligned_position)
+        closest_entity.teleport(aligned_position, nil, true)
     end
+    storage.utils.raise_entity_changed(closest_entity)
 
     local serialized = storage.utils.serialize_entity(closest_entity)
     return serialized
