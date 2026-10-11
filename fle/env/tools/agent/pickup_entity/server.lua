@@ -71,16 +71,25 @@ storage.actions.pickup_entity = function(player_index, x, y, entity)
                     error("Inventory is full")
                 end
 
-                -- Insert all items
+                if not ent.can_be_destroyed() then
+                    error("Could not pick up " .. ent.name .. ": it cannot be destroyed")
+                end
+
+                -- Destroy first, then insert: a script_raised_destroy handler
+                -- may abort the destroy, and items handed out before that
+                -- would be duplicated.
+                local name = ent.name
+                local ok, err = pcall(ent.destroy, {raise_destroy=true, do_cliff_correction=false})
+                if ent.valid then
+                    error("Could not pick up " .. name .. ": "
+                        .. (ok and "destroy refused" or tostring(err)))
+                end
+
+                -- Insert all items (can_receive_items checked above)
                 for _, item in pairs(items_to_insert) do
                     player.insert(item)
                 end
-
-                if ent.can_be_destroyed() then
-                    -- game.print("Picked up placed "..ent.name)
-                    pcall(ent.destroy, {raise_destroy=true, do_cliff_correction=false})
-                    return true
-                end
+                return true
             end
         end
         return false
