@@ -362,8 +362,14 @@ end
 
 -- Define a function to be called every tick
 local function on_tick(event)
-    -- Run the check every 60 ticks (1 second)
-    if event.tick % 60 == 0 then
+    -- Scan every storage.alerts_scan_period ticks (default 60 = 1 second). The
+    -- scan visits every player entity on every surface, so long-running games
+    -- with large factories should raise the period.
+    local period = storage.alerts_scan_period
+    if type(period) ~= "number" or period < 1 then
+        period = 60
+    end
+    if event.tick % period == 0 then
         for _, surface in pairs(game.surfaces) do
             local entities = surface.find_entities_filtered({force = "player"})
             for _, entity in pairs(entities) do

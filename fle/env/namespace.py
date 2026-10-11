@@ -804,6 +804,12 @@ class FactorioNamespace:
                                         value
                                     )
                                     setattr(self, name, value)
+                else:
+                    # Not a namespace function (a builtin, or a typo): evaluate
+                    # normally so an undefined name raises NameError instead of
+                    # being silently skipped, which hid the agent's mistake.
+                    compiled = compile(ast.Expression(node.value), "file", "eval")
+                    response = eval(compiled, eval_dict, eval_dict)
             else:
                 # For non-function call expressions
                 compiled = compile(ast.Expression(node.value), "file", "eval")
