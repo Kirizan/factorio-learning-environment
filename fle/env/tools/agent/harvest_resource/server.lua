@@ -5,9 +5,8 @@ local function calculate_mining_ticks(entity)
     return math.ceil(mining_time * 60)
 end
 
-local function update_production_stats(force, entity_name, amount)
-        -- Factorio 2.0: production_statistics is now a method requiring surface parameter
-        local surface = game.surfaces[1]
+local function update_production_stats(force, entity_name, amount, surface)
+        -- Factorio 2.0: production statistics are per surface; count where it was mined
         local stats = force.get_item_production_statistics(surface)
         stats.on_flow(entity_name, amount)
         if storage.harvested_items[entity_name] then
@@ -376,7 +375,7 @@ function harvest(entities, count, from_position, player)
                 yield = yield + amount
                 entity.mine({ignore_minable=false, raise_destroyed=true})
                 player.insert({name=product.name, count=amount})
-                update_production_stats(player.force, product.name, amount)
+                update_production_stats(player.force, product.name, amount, player.surface)
                 has_mined = true
                 if yield >= count then break end
             end
@@ -409,7 +408,7 @@ function harvest_trees(entities, count, from_position, player)
                 if product.name == "wood" then
                     local amount = product.amount or 1
                     player.insert({name="wood", count=amount})
-                    update_production_stats(player.force, "wood", amount)
+                    update_production_stats(player.force, "wood", amount, player.surface)
                     yield = yield + amount
 
                     local tree_position = entity.position
@@ -446,7 +445,7 @@ local function harvest_simple_entities(entities, count, from_position, player)
                 yield = yield + amount
                 entity.mine({ignore_minable=false, raise_destroyed=true})
                 player.insert({name=product.name, count=amount})
-                update_production_stats(player.force, product.name, amount)
+                update_production_stats(player.force, product.name, amount, player.surface)
 
                 if yield >= count then break end
             end

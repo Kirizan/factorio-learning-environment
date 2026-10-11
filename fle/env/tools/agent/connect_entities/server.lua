@@ -6,6 +6,13 @@ local MAX_PATH_LENGTH = 1000  -- Maximum number of path points to process
 local MAX_STRAIGHT_SECTIONS = 100
 local MAX_UNDERGROUND_SEGMENTS = 50
 
+-- The surface of the agent making the current call. Actions run synchronously,
+-- so storage.actions.connect_entities sets it on entry and helpers read it.
+local current_surface = nil
+local function active_surface()
+    return current_surface or game.surfaces[1]
+end
+
 -- Wire reach values for different electric pole types
 local wire_reach = {
     ['small-electric-pole'] = 4,
@@ -37,7 +44,7 @@ end
 
 local function get_electric_network_at_position(position)
     -- Get all electric poles near the position
-    local nearby_poles = game.surfaces[1].find_entities_filtered{
+    local nearby_poles = active_surface().find_entities_filtered{
         position = position,
         radius = 9, -- Maximum pole reach is 9 for medium poles
         type = "electric-pole"
@@ -60,7 +67,7 @@ end
 
 local function is_position_saturated(position, reach)
     -- Get nearby poles
-    local nearby_poles = game.surfaces[1].find_entities_filtered{
+    local nearby_poles = active_surface().find_entities_filtered{
         position = position,
         radius = 9,
         type = "electric-pole"
@@ -316,17 +323,17 @@ local function is_placeable(position)
         ["water-mud"] = true,
     }
 
-    local entities = game.surfaces[1].find_entities_filtered{
+    local entities = active_surface().find_entities_filtered{
         position = position,
         -- Factorio 2.0: collision_mask expects a collision layer name string
         collision_mask = "player"
     }
     if #entities == 1 then
         if entities[1].name == "character" then
-            return not invalid_tiles[game.surfaces[1].get_tile(position.x, position.y).name]
+            return not invalid_tiles[active_surface().get_tile(position.x, position.y).name]
         end
     end
-    return #entities == 0 and not invalid_tiles[game.surfaces[1].get_tile(position.x, position.y).name]
+    return #entities == 0 and not invalid_tiles[active_surface().get_tile(position.x, position.y).name]
 end
 
 local function find_placeable_neighbor(pos, previous_pos)
@@ -449,12 +456,12 @@ local function place_at_position(player, connection_type, current_position, dir,
             return -- No need to place another pole
         end
 
-        placement_position = game.surfaces[1].find_non_colliding_position(connection_type, current_position, 2, 0.1)
+        placement_position = active_surface().find_non_colliding_position(connection_type, current_position, 2, 0.1)
         if not placement_position then
             error("Cannot find suitable position to place " .. connection_type)
         end
     else
-        local entities = game.surfaces[1].find_entities_filtered{
+        local entities = active_surface().find_entities_filtered{
             position = current_position,
             type = {"beam", "resource", "player"},
             invert=true
@@ -483,7 +490,7 @@ local function place_at_position(player, connection_type, current_position, dir,
         -- For pipes, merge networks
         if connection_type == 'pipe' then
             for _, serialized in ipairs(serialized_entities) do
-                local entity = game.surfaces[1].find_entity(connection_type, serialized.position)
+                local entity = active_surface().find_entity(connection_type, serialized.position)
                 if entity and has_valid_fluidbox(entity) then
                     existing_entity.connect_neighbour(entity)
                 end
@@ -515,7 +522,7 @@ local function place_at_position(player, connection_type, current_position, dir,
         local can_place
         if connection_type == 'pipe' or connection_type == 'pipe-to-ground' or connection_type == 'underground-pipe' then
             -- Use permissive surface check for pipe placement to allow tight spaces
-            can_place = game.surfaces[1].can_place_entity({
+            can_place = active_surface().can_place_entity({
                 name = connection_type,
                 position = placement_position,
                 direction = dir,
@@ -558,7 +565,7 @@ local function place_at_position(player, connection_type, current_position, dir,
         if can_place and not dry_run then
             --storage.utils.avoid_entity(player.index, connection_type, placement_position, dir)
 
-            local placed_entity = game.surfaces[1].create_entity(entity_variant)
+            local placed_entity = active_surface().create_entity(entity_variant)
             if placed_entity then
                 player.remove_item({name = connection_type, count = 1})
                 counter_state.place_counter = counter_state.place_counter + 1
@@ -623,7 +630,7 @@ local function place_at_position(player, connection_type, current_position, dir,
     local can_place
     if connection_type == 'pipe' or connection_type == 'pipe-to-ground' or connection_type == 'underground-pipe' then
         -- Use permissive surface check for pipe placement to allow tight spaces
-        can_place = game.surfaces[1].can_place_entity({
+        can_place = active_surface().can_place_entity({
             name = connection_type,
             position = placement_position,
             direction = dir,
@@ -660,7 +667,7 @@ local function place_at_position(player, connection_type, current_position, dir,
     if can_place and not dry_run then
         --storage.utils.avoid_entity(player.index, connection_type, placement_position, dir)
 
-        local placed_entity = game.surfaces[1].create_entity({
+        local placed_entity = active_surface().create_entity({
             name = connection_type,
             position = placement_position,
             direction = dir,
@@ -931,7 +938,7 @@ local function connect_entities(player_index, source_x, source_y, target_x, targ
         -- Handle source belt orientation if it exists
         if not is_electric_pole and not table_contains(connection_types, 'pipe') then
             local source_pos = {x = source_x, y = source_y}
-            local entities = game.surfaces[1].find_entities_filtered{
+            local entities = active_surface().find_entities_filtered{
                 position = source_pos,
                 name = connection_types,
                 force = "player"
@@ -1046,7 +1053,7 @@ local function connect_entities(player_index, source_x, source_y, target_x, targ
                     serialized_entities = {}
                     
                     -- Find the full belt network by checking from source position
-                    local source_belt = game.surfaces[1].find_entity(default_connection_type, start_position)
+                    local source_belt = active_surface().find_entity(default_connection_type, start_position)
                     local group_data = nil
                     
                     if source_belt and source_belt.valid then
@@ -1218,7 +1225,7 @@ local function are_positions_belt_connected(start_pos, end_pos, connection_type)
     
     local start_belt = nil
     for _, belt_type in ipairs(belt_types) do
-        start_belt = game.surfaces[1].find_entity(belt_type, start_pos)
+        start_belt = active_surface().find_entity(belt_type, start_pos)
         if start_belt then
             break
         end
@@ -1291,7 +1298,7 @@ local function are_positions_pole_connected(start_pos, end_pos, connection_type)
     
     local start_pole = nil
     for _, pole_type in ipairs(pole_types) do
-        start_pole = game.surfaces[1].find_entity(pole_type, start_pos)
+        start_pole = active_surface().find_entity(pole_type, start_pos)
         if start_pole then
             break
         end
@@ -1305,7 +1312,7 @@ local function are_positions_pole_connected(start_pos, end_pos, connection_type)
     if start_pole.electric_network_id then
         local end_pole = nil
         for _, pole_type in ipairs(pole_types) do
-            end_pole = game.surfaces[1].find_entity(pole_type, end_pos)
+            end_pole = active_surface().find_entity(pole_type, end_pos)
             if end_pole then
                 break
             end
@@ -1329,7 +1336,7 @@ local function are_positions_pipe_connected(start_pos, end_pos, connection_type)
     
     local start_pipe = nil
     for _, pipe_type in ipairs(pipe_types) do
-        start_pipe = game.surfaces[1].find_entity(pipe_type, start_pos)
+        start_pipe = active_surface().find_entity(pipe_type, start_pos)
         if start_pipe then
             break
         end
@@ -1343,7 +1350,7 @@ local function are_positions_pipe_connected(start_pos, end_pos, connection_type)
     if has_valid_fluidbox(start_pipe) then
         local end_pipe = nil
         for _, pipe_type in ipairs(pipe_types) do
-            end_pipe = game.surfaces[1].find_entity(pipe_type, end_pos)
+            end_pipe = active_surface().find_entity(pipe_type, end_pos)
             if end_pipe then
                 break
             end
@@ -1394,7 +1401,7 @@ local function serialize_pipe_group(entity)
         table.insert(serialized, storage.utils.serialize_entity(current_pipe))
 
         -- Find all connected pipes in the same fluid system
-        local all_pipes = game.surfaces[1].find_entities_filtered{
+        local all_pipes = active_surface().find_entities_filtered{
             position = current_pipe.position,
             radius = 10,
             type = {"pipe", "pipe-to-ground"}
@@ -1435,7 +1442,7 @@ local function serialize_pole_group(entity)
         local network_id = entity.electric_network_id
         
         for _, area in ipairs(search_areas) do
-            local nearby_poles = game.surfaces[1].find_entities_filtered{
+            local nearby_poles = active_surface().find_entities_filtered{
                 position = area.position,
                 radius = area.radius,
                 type = "electric-pole"
@@ -1491,7 +1498,7 @@ local function validate_belt_connectivity(path)
         end
 
         -- Check if position is placeable - BUT allow existing belts of the same type
-        local entities_at_pos = game.surfaces[1].find_entities_filtered{
+        local entities_at_pos = active_surface().find_entities_filtered{
             position = current_pos,
             radius = 0.1
         }
@@ -1512,7 +1519,7 @@ local function validate_belt_connectivity(path)
 
     -- Check final position - same logic for existing belts
     local final_pos = path[#path].position
-    local final_entities = game.surfaces[1].find_entities_filtered{
+    local final_entities = active_surface().find_entities_filtered{
         position = final_pos,
         radius = 0.1
     }
@@ -1552,7 +1559,7 @@ local function connect_entities_with_validation(player_index, source_x, source_y
                 local start_pole = nil
                 local pole_types = {"small-electric-pole", "medium-electric-pole", "big-electric-pole", "substation"}
                 for _, pole_type in ipairs(pole_types) do
-                    start_pole = game.surfaces[1].find_entity(pole_type, {x = source_x, y = source_y})
+                    start_pole = active_surface().find_entity(pole_type, {x = source_x, y = source_y})
                     if start_pole then
                         break
                     end
@@ -1586,7 +1593,7 @@ local function connect_entities_with_validation(player_index, source_x, source_y
                 local start_pipe = nil
                 local pipe_types = {"pipe", "pipe-to-ground"}
                 for _, pipe_type in ipairs(pipe_types) do
-                    start_pipe = game.surfaces[1].find_entity(pipe_type, {x = source_x, y = source_y})
+                    start_pipe = active_surface().find_entity(pipe_type, {x = source_x, y = source_y})
                     if start_pipe then
                         break
                     end
@@ -1619,7 +1626,7 @@ local function connect_entities_with_validation(player_index, source_x, source_y
                 -- Positions are already connected - return existing group
                 
                 -- Positions are already connected - return existing belt group
-                local start_belt = game.surfaces[1].find_entity(connection_type, {x = source_x, y = source_y})
+                local start_belt = active_surface().find_entity(connection_type, {x = source_x, y = source_y})
                 if start_belt then
                     local group_data = serialize_belt_group(start_belt)
                     if group_data then
@@ -1660,6 +1667,7 @@ end
 
 -- Using the new shortest_path function.
 storage.actions.connect_entities = function(player_index, source_x, source_y, target_x, target_y, path_handle, connection_type_string, dry_run, number_of_connection_entities)
+    current_surface = storage.utils.agent_surface(player_index)
 
     local connection_types = {}
     for item in string.gmatch(connection_type_string, "([^,]+)") do

@@ -3,10 +3,46 @@ storage.utils.remove_enemies = function ()
     game.forces["enemy"].kill_all_units()  -- Removes all biters
     game.map_settings.enemy_expansion.enabled = false  -- Stops biters from expanding
     game.map_settings.enemy_evolution.enabled = false  -- Stops biters from evolving
-    local surface = game.surfaces[1]
-    for _, entity in pairs(surface.find_entities_filtered({type="unit-spawner"})) do
-        entity.destroy()
+    for _, surface in pairs(game.surfaces) do
+        for _, entity in pairs(surface.find_entities_filtered({type="unit-spawner"})) do
+            entity.destroy()
+        end
     end
+end
+
+-- The surface the agent's character is on (planets, space platforms). Remembers
+-- the last known surface so a respawned character returns to it.
+storage.utils.agent_surface = function(player_index)
+    local index = player_index or 1
+    local char = storage.agent_characters and storage.agent_characters[index]
+    if char and char.valid then
+        storage.agent_surface_names = storage.agent_surface_names or {}
+        storage.agent_surface_names[index] = char.surface.name
+        return char.surface
+    end
+    local name = storage.agent_surface_names and storage.agent_surface_names[index]
+    return (name and game.surfaces[name]) or game.surfaces[1]
+end
+
+-- Sum a force's item or fluid flow statistics over every surface.
+-- kind is "item" or "fluid"; returns input_counts, output_counts.
+storage.utils.total_flow_counts = function(force, kind)
+    local input, output = {}, {}
+    for _, surface in pairs(game.surfaces) do
+        local stats
+        if kind == "fluid" then
+            stats = force.get_fluid_production_statistics(surface)
+        else
+            stats = force.get_item_production_statistics(surface)
+        end
+        for name, count in pairs(stats.input_counts) do
+            input[name] = (input[name] or 0) + count
+        end
+        for name, count in pairs(stats.output_counts) do
+            output[name] = (output[name] or 0) + count
+        end
+    end
+    return input, output
 end
 
 local directions = {'north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'}
@@ -131,7 +167,7 @@ storage.utils.avoid_entity = function(player_index, entity, position, direction)
     return false
 end
 
-storage.crafting_queue = {}
+storage.crafting_queue = storage.crafting_queue or {}
 
 script.on_event(defines.events.on_tick, function(event)
   -- Iterate over the crafting queue and update the remaining ticks
@@ -172,9 +208,12 @@ storage.utils.ensure_valid_character = function(player_index)
         --    error("Character not valid")
         --end
 
-        local spawn_position = {x = 0, y = (player_index - 1) * 2}
+        local surface = storage.utils.agent_surface(player_index)
+        local spawn_position = surface.find_non_colliding_position(
+            "character", {x = 0, y = (player_index - 1) * 2}, 50, 0.5
+        ) or {x = 0, y = (player_index - 1) * 2}
 
-        local new_char = game.surfaces[1].create_entity{
+        local new_char = surface.create_entity{
             name = "character",
             position = spawn_position,
             force = game.forces.player

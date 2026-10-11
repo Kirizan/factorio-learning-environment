@@ -184,8 +184,19 @@ class FactorioInstance:
         num_agents=1,
         reset_speed=10,
         reset_paused=False,
+        persistent=False,
         **kwargs,
     ):
+        """
+        :param persistent: Attach to an existing, long-lived game without
+            resetting it: no research/inventory/resource reset, characters are
+            only created if missing, no always_day, no chunk pre-generation,
+            game speed and pause state untouched, enemies left alone
+            (`peaceful` is ignored), crafting queue and alerts kept.
+            For runs that span many connections (e.g. a harness resuming after
+            a restart). Default False keeps the episodic benchmark behaviour.
+        """
+        self.persistent = persistent
         self.id = str(uuid.uuid4())[:8]
         self.num_agents = num_agents
         self.persistent_vars = {}
@@ -205,7 +216,8 @@ class FactorioInstance:
         self.game_control = GameControl(
             self.rcon_client, render_message_tool, reset_speed, reset_paused
         )
-        self.game_control.reset_to_defaults()
+        if not persistent:
+            self.game_control.reset_to_defaults()
 
         self.lua_script_manager = LuaScriptManager(self.rcon_client, cache_scripts)
         self.script_dict = {
@@ -501,7 +513,10 @@ class FactorioInstance:
         self, fast=True, all_technologies_researched=True, clear_entities=True
     ):
         self.rcon_client.send_command(f"/sc storage.fast = {str(fast).lower()}")
-        self.first_namespace._create_agent_characters(self.num_agents)
+        if self.persistent:
+            self._ensure_agent_characters()
+        else:
+            self.first_namespace._create_agent_characters(self.num_agents)
 
         init_scripts = [
             "lualib_util",
@@ -515,6 +530,11 @@ class FactorioInstance:
         for script_name in init_scripts:
             self.lua_script_manager.load_init_into_game(script_name)
 
+        if self.persistent:
+            return
+
+        # Episodic runs start clean (the init scripts keep existing state).
+        self.rcon_client.send_command("/sc storage.crafting_queue = {} storage.alerts = {}")
         if self.peaceful:
             self.rcon_client.send_command("/sc storage.utils.remove_enemies()")
 
@@ -531,6 +551,19 @@ class FactorioInstance:
             clear_entities=clear_entities,
         )
         self.first_namespace._clear_collision_boxes()
+
+    def _ensure_agent_characters(self):
+        """Create agent characters only where none exist (persistent mode)."""
+        self.rcon_client.send_command(
+            "/sc storage.agent_characters = storage.agent_characters or {} "
+            f"for i = 1, {int(self.num_agents)} do "
+            "local c = storage.agent_characters[i] "
+            "if not (c and c.valid) then "
+            "local s = game.surfaces[1] "
+            "local p = s.find_non_colliding_position('character', {x = 0, y = (i - 1) * 2}, 50, 0.5) "
+            "if p then storage.agent_characters[i] = s.create_entity{name = 'character', position = p, force = game.forces.player} end "
+            "end end"
+        )
 
     def get_warnings(self, seconds=10):
         """

@@ -5,16 +5,9 @@ storage.actions.production_stats = function(player)
     local crafted_items = storage.crafted_items
     -- Get total production counts for force
     local force = game.forces.player
-    local surface = game.surfaces[1]
-
-    -- Factorio 2.0: production_statistics is now a method requiring surface parameter
-    local item_stats = force.get_item_production_statistics(surface)
-    local fluid_stats = force.get_fluid_production_statistics(surface)
-
-    local item_input_counts = item_stats.input_counts
-    local item_production_counts = item_stats.output_counts
-    local fluid_input_counts = fluid_stats.input_counts
-    local fluid_production_counts = fluid_stats.output_counts
+    -- Factorio 2.0: statistics are per surface; report the whole force's totals
+    local item_input_counts, item_production_counts = storage.utils.total_flow_counts(force, "item")
+    local fluid_input_counts, fluid_production_counts = storage.utils.total_flow_counts(force, "fluid")
 
     for name, count in pairs(item_input_counts) do
         consumption_diff[name] = count
@@ -41,14 +34,11 @@ end
 
 storage.actions.reset_production_stats = function(player)
     local force = game.forces.player
-    local surface = game.surfaces[1]
-
-    -- Factorio 2.0: production_statistics is now a method requiring surface parameter
-    -- Reset item statistics
-    force.get_item_production_statistics(surface).clear()
-
-    -- Reset fluid statistics
-    force.get_fluid_production_statistics(surface).clear()
+    -- Factorio 2.0: statistics are per surface; reset all of them
+    for _, surface in pairs(game.surfaces) do
+        force.get_item_production_statistics(surface).clear()
+        force.get_fluid_production_statistics(surface).clear()
+    end
 
     storage.harvested_items = {}
     storage.crafted_items = {}

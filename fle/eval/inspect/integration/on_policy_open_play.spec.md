@@ -562,10 +562,10 @@ def plot_time_to_first_research(samples_df: pd.DataFrame, ...): ...
 
 Technology tier definitions:
 ```python
-TIER1_TECHS = {'automation', 'logistics', 'optics', 'turrets', 'stone-wall', 'electronics', 'steel-processing'}
+TIER1_TECHS = {'automation', 'logistics', 'lamp', 'gun-turret', 'stone-wall', 'electronics', 'steel-processing'}
 TIER2_TECHS = {'automation-2', 'logistics-2', 'fast-inserter', 'steel-axe', 'military', 'military-2',
                'engine', 'fluid-handling', 'oil-processing', 'plastics', 'sulfur-processing'}
-TIER3_TECHS = {'automation-3', 'logistics-3', 'advanced-electronics', 'advanced-electronics-2',
+TIER3_TECHS = {'automation-3', 'logistics-3', 'advanced-circuit', 'processing-unit',
                'advanced-oil-processing', 'chemical-science-pack', 'production-science-pack',
                'utility-science-pack', 'rocket-silo', 'space-science-pack'}
 ```

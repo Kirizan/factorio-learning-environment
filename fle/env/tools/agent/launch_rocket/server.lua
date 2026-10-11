@@ -20,8 +20,8 @@ end
 
 -- Function to launch rocket from specified position
 storage.actions.launch_rocket = function(x, y)
-    -- Get the current game surface
-    local surface = game.surfaces[1]
+    -- The silo is on the surface the (first) agent is on
+    local surface = storage.utils.agent_surface(1)
     local position = {x=x, y=y}
     -- Find rocket silo at the given position
     local silo = find_rocket_silo(surface, position)

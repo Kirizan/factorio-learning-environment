@@ -309,20 +309,21 @@ end
 production_score.get_production_scores = function(_price_list)
   local price_list = _price_list or production_score.generate_price_list()
   local scores = {}
-  local surface = game.surfaces[1]
   for k, force in pairs (game.forces) do
     local score = 0
-    -- Factorio 2.0: production_statistics is now a method requiring surface parameter
-    for name, value in pairs (get_total_production_counts(force.get_item_production_statistics(surface))) do
-      local price = price_list[name]
-      if price then
-        score = score + (price * value)
+    -- Factorio 2.0: production statistics are per surface; score every surface
+    for _, surface in pairs (game.surfaces) do
+      for name, value in pairs (get_total_production_counts(force.get_item_production_statistics(surface))) do
+        local price = price_list[name]
+        if price then
+          score = score + (price * value)
+        end
       end
-    end
-    for name, value in pairs (get_total_production_counts(force.get_fluid_production_statistics(surface))) do
-      local price = price_list[name]
-      if price then
-        score = score + (price * value)
+      for name, value in pairs (get_total_production_counts(force.get_fluid_production_statistics(surface))) do
+        local price = price_list[name]
+        if price then
+          score = score + (price * value)
+        end
       end
     end
     scores[force.name] = math.floor(score)

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "factorio-learning-environment"
-version = "0.4.3+kirizan.1"
+version = "0.4.3+kirizan.2"
 description = "Factorio Learning Environment"
 authors = [
     {name = "Jack Hopkins", email = "noreply@github.com"},
@@ -43,7 +43,7 @@ dependencies = [
     "aiohttp>=3.8.0",
     "uvicorn>=0.15.0",
     "pytest>=8.4.1",
-    "mcp[cli]>=1.11.0",
+    "mcp[cli]>=1.11.0,<2",
     "black>=25.1.0",
     "memoization>=0.4.0",
     "inspect-ai>=0.3.139",
@@ -89,7 +89,7 @@ all = [
     "scikit-image>=0.25.2",
 ]
 mcp = [
-    "mcp[cli]",
+    "mcp[cli]>=1.11.0,<2",
     "dulwich",
 ]
 env = [
