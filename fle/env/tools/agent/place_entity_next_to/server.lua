@@ -536,6 +536,7 @@ storage.actions.place_entity_next_to = function(player_index, entity, ref_x, ref
         force = player.force,
         direction = orientation,
         move_stuck_players = true,
+        raise_built = true,
     })
 
     if not new_entity then

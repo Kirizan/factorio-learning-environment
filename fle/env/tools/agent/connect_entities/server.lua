@@ -484,6 +484,7 @@ local function place_at_position(player, connection_type, current_position, dir,
         if existing_entity.name ~= connection_type then
             if existing_entity.direction ~= dir then
                 existing_entity.direction = dir
+                storage.utils.raise_entity_changed(existing_entity)
             end
         end
 
@@ -515,7 +516,8 @@ local function place_at_position(player, connection_type, current_position, dir,
             direction = dir,
             force = player.force,
             type = is_underground_exit and "output" or "input",
-            move_stuck_players=true
+            move_stuck_players=true,
+            raise_built = true,
         }
         -- We can just teleport away here to avoid collision as we dont adhere by distance rules in connect_entities
         player.teleport({placement_position.x+2, placement_position.y+2})
@@ -672,7 +674,8 @@ local function place_at_position(player, connection_type, current_position, dir,
             position = placement_position,
             direction = dir,
             force = player.force,
-            move_stuck_players=true
+            move_stuck_players=true,
+            raise_built = true,
         })
 
         if placed_entity then
@@ -953,6 +956,7 @@ local function connect_entities(player_index, source_x, source_y, target_x, targ
                 local source_belt = entities[1]
                 if source_belt and source_belt.valid and source_belt.direction ~= initial_dir then
                     source_belt.direction = initial_dir
+                    storage.utils.raise_entity_changed(source_belt)
                     table.insert(serialized_entities, storage.utils.serialize_entity(source_belt))
                 end
             end
