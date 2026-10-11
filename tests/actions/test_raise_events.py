@@ -9,7 +9,7 @@ any other mod listening to these events then sees everything the agent does.
 import pytest
 
 from fle.env.entities import Direction, Position
-from fle.env.game_types import Prototype
+from fle.env.game_types import Prototype, RecipeName
 
 EVENTS = ("script_raised_built", "script_raised_destroy", "script_raised_teleported")
 
@@ -52,7 +52,12 @@ def raised(instance):
 @pytest.fixture()
 def game(configure_game):
     return configure_game(
-        inventory={"assembling-machine-1": 2, "transport-belt": 10, "wooden-chest": 2}
+        inventory={
+            "assembling-machine-1": 2,
+            "assembling-machine-2": 1,
+            "transport-belt": 10,
+            "wooden-chest": 2,
+        }
     )
 
 
@@ -83,3 +88,65 @@ def test_connect_entities_raises_built(game, raised):
     )
     built = [e for e in raised() if e == "script_raised_built:transport-belt"]
     assert len(built) >= 6, built
+
+
+def test_rotate_raises_built_after_restoring_state(game, instance):
+    """A recreated machine is announced only once its recipe and inputs are
+    back: a handler sees the full state, and one that throws loses nothing."""
+    game.move_to(Position(x=0, y=0))
+    machine = game.place_entity(Prototype.AssemblingMachine2, position=Position(x=4, y=0))
+    machine = game.set_entity_recipe(machine, RecipeName.FillCrudeOilBarrel)
+    x, y = machine.position.x, machine.position.y
+    lua(
+        instance,
+        "local m = game.surfaces[1].find_entities_filtered{name='assembling-machine-2', "
+        f"position={{{x}, {y}}}, radius=0.5}}[1] "
+        "local inv = m.get_inventory(defines.inventory.assembling_machine_input) "
+        "inv.insert{name='barrel', count=5} "
+        "fle_test_seen = {} "
+        "script.on_event(defines.events.script_raised_built, function(e) "
+        "local inv = e.entity.get_inventory(defines.inventory.assembling_machine_input) "
+        "local r = e.entity.get_recipe() "
+        "table.insert(fle_test_seen, (r and r.name or 'none') .. '=' .. inv.get_item_count()) "
+        "end)",
+    )
+    try:
+        game.rotate_entity(machine, Direction.DOWN)
+        seen = lua(instance, "rcon.print(table.concat(fle_test_seen, ','))").strip()
+    finally:
+        lua(
+            instance,
+            "script.on_event(defines.events.script_raised_built, nil) fle_test_seen = nil",
+        )
+    assert seen == "crude-oil-barrel=5", seen
+
+
+def test_pickup_aborted_by_a_destroy_handler_duplicates_nothing(game, instance):
+    """Items are handed out only once the entity is really gone."""
+    game.move_to(Position(x=0, y=0))
+    chest = game.place_entity(Prototype.WoodenChest, position=Position(x=-3, y=0))
+    before = game.inspect_inventory()[Prototype.WoodenChest]
+    lua(
+        instance,
+        "script.on_event(defines.events.script_raised_destroy, function(e) error('veto') end)",
+    )
+    try:
+        try:
+            game.pickup_entity(chest)
+            picked = True
+        except Exception:
+            picked = False
+    finally:
+        lua(instance, "script.on_event(defines.events.script_raised_destroy, nil)")
+    x, y = chest.position.x, chest.position.y
+    present = lua(
+        instance,
+        "rcon.print(#game.surfaces[1].find_entities_filtered{name='wooden-chest', "
+        f"position={{{x}, {y}}}, radius=0.5}})",
+    ).strip()
+    after = game.inspect_inventory()[Prototype.WoodenChest]
+    # Exactly one of: still placed and not in the inventory, or picked up.
+    if present != "0":
+        assert not picked and after == before, (present, before, after)
+    else:
+        assert after == before + 1, (before, after)
