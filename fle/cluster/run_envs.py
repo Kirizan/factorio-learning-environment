@@ -68,7 +68,7 @@ class ComposeGenerator:
     """Compose YAML generator with centralized path handling."""
 
     rcon_password = RCON_PASSWORD
-    image = "factoriotools/factorio:2.0.73"
+    image = "factoriotools/factorio:2.0.77"
     map_gen_seed = 44340
     internal_rcon_port = 27015
     internal_game_port = 34197
