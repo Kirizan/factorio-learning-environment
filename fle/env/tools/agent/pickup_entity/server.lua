@@ -78,7 +78,7 @@ storage.actions.pickup_entity = function(player_index, x, y, entity)
 
                 if ent.can_be_destroyed() then
                     -- game.print("Picked up placed "..ent.name)
-                    pcall(ent.destroy{raise_destroy=false, do_cliff_correction=false})
+                    pcall(ent.destroy, {raise_destroy=true, do_cliff_correction=false})
                     return true
                 end
             end
@@ -101,7 +101,7 @@ storage.actions.pickup_entity = function(player_index, x, y, entity)
                 local inserted = player.insert{name=entity, count=count}
                 if inserted > 0 then
                     -- game.print("Picked up ground item2 " .. count .. " " .. entity)
-                    pcall(item.destroy{raise_destroy=false})
+                    pcall(item.destroy, {raise_destroy=false})
                     return true
                 end
             end

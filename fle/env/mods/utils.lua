@@ -10,6 +10,20 @@ storage.utils.remove_enemies = function ()
     end
 end
 
+-- Tell other mods that a script changed an entity in place (direction,
+-- recipe, mirroring). Factorio has no raisable "changed" event, so this raises
+-- script_raised_teleported with the entity's current position: listeners see
+-- old_position == position and re-read the entity's state.
+storage.utils.raise_entity_changed = function(entity)
+    if entity and entity.valid then
+        script.raise_script_teleported{
+            entity = entity,
+            old_surface_index = entity.surface.index,
+            old_position = entity.position,
+        }
+    end
+end
+
 -- The surface the agent's character is on (planets, space platforms). Remembers
 -- the last known surface so a respawned character returns to it.
 storage.utils.agent_surface = function(player_index)
